@@ -35,47 +35,86 @@ def get_weather(coordinates):
 
 
 def weather_to_text(forecast, kind, unit):
+    text = forecast[kind]["summary"] + "\n\n"
+    row_0 = Columnizer()
+    row_1 = Columnizer()
+    # Add today
+    today = [
+            "Current",
+            "",
+            *arts[forecast["currently"]["icon"]],
+            ""
+        ]
+    if unit == "c":
+        today += ["{0:.1f}°C".format(
+            5*(forecast["currently"]["temperature"]-32)/9)]
+    else:
+        today += [str(forecast["currently"]["temperature"]) + "°F"]
+    # today += ["", forecast["currently"]["summary"]]
+    row_0.add_column(today)
+    count = 1
     if kind == "daily":
-        text = forecast["daily"]["summary"] + "\n\n"
-        row_0 = Columnizer()
-        row_1 = Columnizer()
-        # Add today
-        today = [
-                "Current",
-                "",
-                *arts[forecast["currently"]["icon"]],
-                ""
-            ]
-        if unit == "c":
-            today += ["{0:.1f}°C".format(
-                5*(forecast["currently"]["temperature"]-32)/9)]
-        else:
-            today += [str(forecast["currently"]["temperature"]) + "°F"]
-        # today += ["", forecast["currently"]["summary"]]
-        row_0.add_column(today)
-        count = 1
-
-        for i in forecast["daily"]["data"]:
-            x = []
-            date = datetime.fromtimestamp(i["time"],
-                                          timezone(forecast["timezone"]))
+        diff = 1
+    elif kind == "hourly":
+        diff = 3
+    for j in range(0, len(forecast[kind]["data"]), diff):
+        i = forecast[kind]["data"][j]
+        x = []
+        date = datetime.fromtimestamp(i["time"],
+                                      timezone(forecast["timezone"]))
+        if kind == "daily":
             x += date.strftime("%d %B\n%A").split("\n")
-            x += [*arts[i["icon"]]]
-            x += [""]
-            if unit == "c":
+        elif kind == "hourly":
+            x += [date.strftime("%H:%M"), ""]
+        x += [*arts[i["icon"]]]
+        x += [""]
+        if unit == "c":
+            if kind == "daily":
                 x += ["Max: {0:.1f}°C".format(5*(i["temperatureMax"]-32)/9)]
                 x += ["Min: {0:.1f}°C".format(5*(i["temperatureMin"]-32)/9)]
-            else:
+            elif kind == "hourly":
+                x += ["Temp: {0:.1f}°C".format(5*(i["temperature"]-32)/9)]
+        else:
+            if kind == "daily":
                 x += ["Max: {0:.1f}°F".format(i["temperatureMax"])]
                 x += ["Min: {0:.1f}°F".format(i["temperatureMin"])]
-            # x += [i["summary"]]
-            if count < 4:
-                row_0.add_column(x)
-            elif count < 8:
-                row_1.add_column(x)
-            else:
-                break
-            count += 1
+            elif kind == "hourly":
+                x += ["Temp: {0:.1f}°F".format(i["temperature"])]
+        # x += [i["summary"]]
+        if count < 4:
+            row_0.add_column(x)
+        elif count < 8:
+            row_1.add_column(x)
+        else:
+            break
+        count += 1
+    for i in forecast[kind]["data"]:
+        x = []
+        date = datetime.fromtimestamp(i["time"],
+                                      timezone(forecast["timezone"]))
+        x += date.strftime("%d %B\n%A").split("\n")
+        x += [*arts[i["icon"]]]
+        x += [""]
+        if unit == "c":
+            if kind == "daily":
+                x += ["Max: {0:.1f}°C".format(5*(i["temperatureMax"]-32)/9)]
+                x += ["Min: {0:.1f}°C".format(5*(i["temperatureMin"]-32)/9)]
+            elif kind == "hourly":
+                x += ["Temp: {0:.1f}°C".format(5*(i["temperature"]-32)/9)]
+        else:
+            if kind == "daily":
+                x += ["Max: {0:.1f}°F".format(i["temperatureMax"])]
+                x += ["Min: {0:.1f}°F".format(i["temperatureMin"])]
+            elif kind == "hourly":
+                x += ["Temp: {0:.1f}°F".format(i["temperature"])]
+        # x += [i["summary"]]
+        if count < 4:
+            row_0.add_column(x)
+        elif count < 8:
+            row_1.add_column(x)
+        else:
+            break
+        count += 1
     text += str(row_0) + "\n" + str(row_1)
     return text
 
@@ -98,10 +137,16 @@ def main(location, geocoder, cache_db, kind, unit):
 app.add_url_rule('/<location>', 'location', lambda location:
                  main(location, geocoder, cache_db, "daily", "c"))
 
+app.add_url_rule('/<location>/', 'location/', lambda location:
+                 main(location, geocoder, cache_db, "daily", "c"))
+
 app.add_url_rule('/<location>/t', 'today_location', lambda location:
                  main(location, geocoder, cache_db, "hourly", "c"))
 
 app.add_url_rule('/f/<location>', 'location_f', lambda location:
+                 main(location, geocoder, cache_db, "daily", "f"))
+
+app.add_url_rule('/f/<location>/', 'location_f/', lambda location:
                  main(location, geocoder, cache_db, "daily", "f"))
 
 app.add_url_rule('/f/<location>/t', 'today_location_f', lambda location:
