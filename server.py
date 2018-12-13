@@ -24,9 +24,9 @@ def get_coordinates(location, geocoder, cache_db):
 
     loc = geocoder.forward(location)
     coordinates = loc.geojson()['features'][0]['center']
-    cache_db.execute("insert into location(name, lat, lon) values(?,?,?)",
+    cache_db.execute("insert into location(name, lon, lat) values(?,?,?)",
                      (location, *coordinates))
-    return tuple(coordinates)
+    return (coordinates[1], coordinates[0])
 
 
 def get_weather(coordinates):
