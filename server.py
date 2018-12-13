@@ -121,8 +121,17 @@ def weather_to_text(forecast, kind, unit):
 
 @app.route('/')
 def index():
-    text = ("To get the weather for a location, run curl "
-            "https://sky.webionite.com/location. \n" + config.source)
+    text = ("\nSky - A simple weather monitor\n\n"
+            "Usage\n\n"
+            "To check weather for your location simply run the following "
+            "command in a terminal\n\n"
+            "In Celsius\n"
+            "+ Weather for one week - curl sky.webionite.com/location \n"
+            "+ Weather for today - curl sky.webionite.com/location/t\n\n"
+            "In Fahrenheit\n"
+            "+ Weather for one week - curl sky.webionite.com/f/location \n"
+            "+ Weather for today - curl sky.webionite.com/f/location/t\n\n"
+            + config.source + "\n")
     return text
 
 
