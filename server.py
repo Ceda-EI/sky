@@ -66,8 +66,8 @@ def weather_to_text(forecast, kind, unit):
                 x += ["Max: {0:.1f}°C".format(5*(i["temperatureMax"]-32)/9)]
                 x += ["Min: {0:.1f}°C".format(5*(i["temperatureMin"]-32)/9)]
             else:
-                x += ["Max: {0:.1f}°C".format(i["temperatureMax"])]
-                x += ["Min: {0:.1f}°C".format(i["temperatureMin"])]
+                x += ["Max: {0:.1f}°F".format(i["temperatureMax"])]
+                x += ["Min: {0:.1f}°F".format(i["temperatureMin"])]
             # x += [i["summary"]]
             if count < 4:
                 row_0.add_column(x)
