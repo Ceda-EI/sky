@@ -16,17 +16,18 @@ cache_db = sqlite3.connect("cache.sqlite", check_same_thread=False)
 
 
 def get_coordinates(location, geocoder, cache_db):
-    row = cache_db.execute("select lat,lon from location where name = ?;",
-                           (location,)).fetchone()
+    row = cache_db.execute("select lat,lon,full_name from location where "
+                           "name = ?", (location,)).fetchone()
 
     if row is not None:
-        return (row[0], row[1])
+        return (row[0], row[1], row[2])
 
     loc = geocoder.forward(location)
     coordinates = loc.geojson()['features'][0]['center']
-    cache_db.execute("insert into location(name, lon, lat) values(?,?,?)",
-                     (location, *coordinates))
-    return (coordinates[1], coordinates[0])
+    name = loc.geojson()['features'][0]['place_name']
+    cache_db.execute("insert into location(name, lon, lat, full_name) values("
+                     "?,?,?,?)", (location, *coordinates, name))
+    return (coordinates[1], coordinates[0], name)
 
 
 def get_weather(coordinates):
@@ -34,8 +35,8 @@ def get_weather(coordinates):
                             coordinates[1])
 
 
-def weather_to_text(forecast, kind, unit):
-    text = forecast[kind]["summary"] + "\n\n"
+def weather_to_text(forecast, kind, unit, name):
+    text = name + "\n" + forecast[kind]["summary"] + "\n\n"
     row_0 = Columnizer()
     row_1 = Columnizer()
     # Add today
@@ -138,7 +139,7 @@ def index():
 def main(location, geocoder, cache_db, kind, unit):
     coordinates = get_coordinates(location, geocoder, cache_db)
     weather = get_weather(coordinates)
-    text = weather_to_text(weather, kind, unit)
+    text = weather_to_text(weather, kind, unit, coordinates[2])
     return ("\n" + text + "\n\n" + config.source + "\nPowered by Dark Sky - "
             "https://darksky.net/poweredby/\n")
 
