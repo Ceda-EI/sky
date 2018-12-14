@@ -10,6 +10,7 @@ import config
 from datetime import datetime
 from pytz import timezone
 from textwrap import wrap
+import re
 
 geocoder = Geocoder(access_token=config.mapbox_key)
 app = Flask(__name__)
@@ -36,8 +37,20 @@ def get_weather(coordinates):
                             coordinates[1])
 
 
+def summary_to_c(summary):
+    for i in re.findall(r"[\d.]+°F", summary):
+        f = float(i[:-2])
+        c = 5 * (f - 32)/9
+        summary = re.sub(i, f"{c:3.3}°C", summary)
+    return summary
+
+
 def weather_to_text(forecast, kind, unit, name):
-    text = name + "\n" + forecast[kind]["summary"] + "\n\n"
+    text = name + "\n"
+    if unit == "c":
+        text += summary_to_c(forecast[kind]["summary"]) + "\n\n"
+    else:
+        text += forecast[kind]["summary"] + "\n\n"
     row_0 = Columnizer()
     row_1 = Columnizer()
     # Add today
