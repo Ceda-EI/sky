@@ -9,6 +9,7 @@ import sqlite3
 import config
 from datetime import datetime
 from pytz import timezone
+from textwrap import wrap
 
 geocoder = Geocoder(access_token=config.mapbox_key)
 app = Flask(__name__)
@@ -51,7 +52,10 @@ def weather_to_text(forecast, kind, unit, name):
             5*(forecast["currently"]["temperature"]-32)/9)]
     else:
         today += [str(forecast["currently"]["temperature"]) + "°F"]
-    # today += ["", forecast["currently"]["summary"]]
+    today += [""]
+    if kind == "daily":
+        today += [""]
+    today += wrap(forecast["currently"]["summary"], 18)
     row_0.add_column(today)
     count = 1
     if kind == "daily":
@@ -81,7 +85,8 @@ def weather_to_text(forecast, kind, unit, name):
                 x += ["Min: {0:.1f}°F".format(i["temperatureMin"])]
             elif kind == "hourly":
                 x += ["Temp: {0:.1f}°F".format(i["temperature"])]
-        # x += [i["summary"]]
+        x += [""]
+        x += wrap(i["summary"], 18)
         if count < 4:
             row_0.add_column(x)
         elif count < 8:
