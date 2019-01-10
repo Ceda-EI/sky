@@ -162,6 +162,10 @@ def main(location, geocoder, cache_db, kind, unit):
             "https://darksky.net/poweredby/\n")
 
 
+def strip_colors(text):
+    return re.sub('\033\\[[0-9;]+?m', '', text)
+
+
 app.add_url_rule('/<location>', 'location', lambda location:
                  main(location, geocoder, cache_db, "daily", "c"))
 
@@ -179,3 +183,27 @@ app.add_url_rule('/f/<location>/', 'location_f/', lambda location:
 
 app.add_url_rule('/f/<location>/t', 'today_location_f', lambda location:
                  main(location, geocoder, cache_db, "hourly", "f"))
+
+app.add_url_rule('/plain/<location>', 'plain_location', lambda location:
+                 strip_colors(main(location, geocoder, cache_db, "daily",
+                              "c")))
+
+app.add_url_rule('/plain/<location>/', 'plain_location/', lambda location:
+                 strip_colors(main(location, geocoder, cache_db, "daily",
+                              "c")))
+
+app.add_url_rule('/plain/<location>/t', 'plain_today_location', lambda
+                 location: strip_colors(main(location, geocoder, cache_db,
+                                        "hourly", "c")))
+
+app.add_url_rule('/plain/f/<location>', 'plain_location_f', lambda location:
+                 strip_colors(main(location, geocoder, cache_db, "daily",
+                              "f")))
+
+app.add_url_rule('/plain/f/<location>/', 'plain_location_f/', lambda location:
+                 strip_colors(main(location, geocoder, cache_db, "daily",
+                              "f")))
+
+app.add_url_rule('/plain/f/<location>/t', 'plain_today_location_f', lambda
+                 location: strip_colors(main(location, geocoder, cache_db,
+                                        "hourly", "f")))
