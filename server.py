@@ -150,7 +150,7 @@ def index():
             "In Fahrenheit\n"
             "+ Weather for one week - curl sky.webionite.com/f/location \n"
             "+ Weather for today - curl sky.webionite.com/f/location/t\n\n"
-            "Replace sky.webionite.com/ with sky.webionite.com/plain/ on "
+            "Replace sky.webionite.com/ with sky.webionite.com/p/ on "
             "Windows \n\n"
             + config.source + "\n")
     return text
@@ -186,26 +186,26 @@ app.add_url_rule('/f/<location>/', 'location_f/', lambda location:
 app.add_url_rule('/f/<location>/t', 'today_location_f', lambda location:
                  main(location, geocoder, cache_db, "hourly", "f"))
 
-app.add_url_rule('/plain/<location>', 'plain_location', lambda location:
+app.add_url_rule('/p/<location>', 'plain_location', lambda location:
                  strip_colors(main(location, geocoder, cache_db, "daily",
                               "c")))
 
-app.add_url_rule('/plain/<location>/', 'plain_location/', lambda location:
+app.add_url_rule('/p/<location>/', 'plain_location/', lambda location:
                  strip_colors(main(location, geocoder, cache_db, "daily",
                               "c")))
 
-app.add_url_rule('/plain/<location>/t', 'plain_today_location', lambda
+app.add_url_rule('/p/<location>/t', 'plain_today_location', lambda
                  location: strip_colors(main(location, geocoder, cache_db,
                                         "hourly", "c")))
 
-app.add_url_rule('/plain/f/<location>', 'plain_location_f', lambda location:
+app.add_url_rule('/p/f/<location>', 'plain_location_f', lambda location:
                  strip_colors(main(location, geocoder, cache_db, "daily",
                               "f")))
 
-app.add_url_rule('/plain/f/<location>/', 'plain_location_f/', lambda location:
+app.add_url_rule('/p/f/<location>/', 'plain_location_f/', lambda location:
                  strip_colors(main(location, geocoder, cache_db, "daily",
                               "f")))
 
-app.add_url_rule('/plain/f/<location>/t', 'plain_today_location_f', lambda
+app.add_url_rule('/p/f/<location>/t', 'plain_today_location_f', lambda
                  location: strip_colors(main(location, geocoder, cache_db,
                                         "hourly", "f")))

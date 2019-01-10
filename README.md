@@ -14,4 +14,4 @@ To check weather for your location simply run the following command in a termina
 + Weather for one week - `curl sky.webionite.com/f/location`
 + Weather for today - `curl sky.webionite.com/f/location/t`
 
-Replace sky.webionite.com/ with sky.webionite.com/plain/ on Windows
+Replace sky.webionite.com/ with sky.webionite.com/p/ on Windows
