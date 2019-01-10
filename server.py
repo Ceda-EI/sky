@@ -150,6 +150,8 @@ def index():
             "In Fahrenheit\n"
             "+ Weather for one week - curl sky.webionite.com/f/location \n"
             "+ Weather for today - curl sky.webionite.com/f/location/t\n\n"
+            "Replace sky.webionite.com/ with sky.webionite.com/plain/ on "
+            "Windows \n\n"
             + config.source + "\n")
     return text
 
