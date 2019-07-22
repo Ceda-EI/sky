@@ -157,7 +157,10 @@ def index():
 
 
 def main(location, geocoder, cache_db, kind, unit):
-    coordinates = get_coordinates(location, geocoder, cache_db)
+    try:
+        coordinates = get_coordinates(location, geocoder, cache_db)
+    except KeyError:
+        return "Location Not found"
     weather = get_weather(coordinates)
     text = weather_to_text(weather, kind, unit, coordinates[2])
     return ("\n" + text + "\n\n" + config.source + "\nPowered by Dark Sky - "
@@ -209,3 +212,9 @@ app.add_url_rule('/p/f/<location>/', 'plain_location_f/', lambda location:
 app.add_url_rule('/p/f/<location>/t', 'plain_today_location_f', lambda
                  location: strip_colors(main(location, geocoder, cache_db,
                                         "hourly", "f")))
+
+
+@app.after_request
+def after(response):
+    response.headers['Content-Type'] = "text/plain; charset=utf-8"
+    return response
