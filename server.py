@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
+"Sky - A simple weather monitor"
 
+import re
+import sqlite3
+from datetime import datetime
+from textwrap import wrap
+
+import darksky
 from flask import Flask
 from mapbox import Geocoder
-import darksky
+from pytz import timezone
+
+import config
 from columnizer import Columnizer
 from ascii import arts
-import sqlite3
-import config
-from datetime import datetime
-from pytz import timezone
-from textwrap import wrap
-import re
 
-geocoder = Geocoder(access_token=config.mapbox_key)
-app = Flask(__name__)
-cache_db = sqlite3.connect("cache.sqlite", check_same_thread=False)
+GEOCODER = Geocoder(access_token=config.mapbox_key)
+APP = Flask(__name__)
+CACHE_DB = sqlite3.connect("cache.sqlite", check_same_thread=False)
 
 
 def get_coordinates(location, geocoder, cache_db):
+    "Returns the coordinates for a given location"
     row = cache_db.execute("select lat,lon,full_name from location where "
                            "name = ?", (location,)).fetchone()
 
@@ -33,11 +37,14 @@ def get_coordinates(location, geocoder, cache_db):
 
 
 def get_weather(coordinates):
+    "Returns the forecast from the coordinates"
     return darksky.forecast(config.dark_sky_key, coordinates[0],
                             coordinates[1])
 
 
 def summary_to_c(summary):
+    "Converts Fahrenheits to Celsius in a string"
+    # pylint: disable=invalid-name
     for i in re.findall(r"[\d.]+°F", summary):
         f = float(i[:-2])
         c = 5 * (f - 32)/9
@@ -46,6 +53,7 @@ def summary_to_c(summary):
 
 
 def weather_to_text(forecast, kind, unit, name):
+    "Converts the forecast to text"
     text = name + "\n"
     if unit == "c":
         text += summary_to_c(forecast[kind]["summary"]) + "\n\n"
@@ -55,11 +63,11 @@ def weather_to_text(forecast, kind, unit, name):
     row_1 = Columnizer()
     # Add today
     today = [
-            "Current",
-            "",
-            *arts[forecast["currently"]["icon"]],
-            ""
-        ]
+        "Current",
+        "",
+        *arts[forecast["currently"]["icon"]],
+        ""
+    ]
     if unit == "c":
         today += ["{0:.1f}°C".format(
             5*(forecast["currently"]["temperature"]-32)/9)]
@@ -138,8 +146,9 @@ def weather_to_text(forecast, kind, unit, name):
     return text
 
 
-@app.route('/')
+@APP.route('/')
 def index():
+    "/ - Gives the default index page"
     text = ("\nSky - A simple weather monitor\n\n"
             "Usage\n\n"
             "To check weather for your location simply run the following "
@@ -157,6 +166,7 @@ def index():
 
 
 def main(location, geocoder, cache_db, kind, unit):
+    "Main function that returns the weather based on parameters"
     try:
         coordinates = get_coordinates(location, geocoder, cache_db)
     except KeyError:
@@ -168,53 +178,34 @@ def main(location, geocoder, cache_db, kind, unit):
 
 
 def strip_colors(text):
+    "Strips ANSI colors from a string"
     return re.sub('\033\\[[0-9;]+?m', '', text)
 
 
-app.add_url_rule('/<location>', 'location', lambda location:
-                 main(location, geocoder, cache_db, "daily", "c"))
-
-app.add_url_rule('/<location>/', 'location/', lambda location:
-                 main(location, geocoder, cache_db, "daily", "c"))
-
-app.add_url_rule('/<location>/t', 'today_location', lambda location:
-                 main(location, geocoder, cache_db, "hourly", "c"))
-
-app.add_url_rule('/f/<location>', 'location_f', lambda location:
-                 main(location, geocoder, cache_db, "daily", "f"))
-
-app.add_url_rule('/f/<location>/', 'location_f/', lambda location:
-                 main(location, geocoder, cache_db, "daily", "f"))
-
-app.add_url_rule('/f/<location>/t', 'today_location_f', lambda location:
-                 main(location, geocoder, cache_db, "hourly", "f"))
-
-app.add_url_rule('/p/<location>', 'plain_location', lambda location:
-                 strip_colors(main(location, geocoder, cache_db, "daily",
-                              "c")))
-
-app.add_url_rule('/p/<location>/', 'plain_location/', lambda location:
-                 strip_colors(main(location, geocoder, cache_db, "daily",
-                              "c")))
-
-app.add_url_rule('/p/<location>/t', 'plain_today_location', lambda
-                 location: strip_colors(main(location, geocoder, cache_db,
-                                        "hourly", "c")))
-
-app.add_url_rule('/p/f/<location>', 'plain_location_f', lambda location:
-                 strip_colors(main(location, geocoder, cache_db, "daily",
-                              "f")))
-
-app.add_url_rule('/p/f/<location>/', 'plain_location_f/', lambda location:
-                 strip_colors(main(location, geocoder, cache_db, "daily",
-                              "f")))
-
-app.add_url_rule('/p/f/<location>/t', 'plain_today_location_f', lambda
-                 location: strip_colors(main(location, geocoder, cache_db,
-                                        "hourly", "f")))
+@APP.route('/<path:path>')
+def url_parser(path):
+    "Parses the URL"
+    location = ''
+    unit = 'c'
+    plain = False
+    frequency = 'daily'
+    for part in path.strip('/').split('/'):
+        if part == 'f':
+            unit = 'f'
+        elif part == 'p':
+            plain = True
+        elif part == 't':
+            frequency = 'hourly'
+        else:
+            location = part
+    if plain:
+        return strip_colors(main(location, GEOCODER, CACHE_DB, frequency,
+                                 unit))
+    return main(location, GEOCODER, CACHE_DB, frequency, unit)
 
 
-@app.after_request
+@APP.after_request
 def after(response):
+    "Sets content type to text/plain"
     response.headers['Content-Type'] = "text/plain; charset=utf-8"
     return response
