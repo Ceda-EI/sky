@@ -169,7 +169,7 @@ def main(location, geocoder, cache_db, kind, unit):
     "Main function that returns the weather based on parameters"
     try:
         coordinates = get_coordinates(location, geocoder, cache_db)
-    except KeyError:
+    except (IndexError, KeyError):
         return "Location Not found"
     weather = get_weather(coordinates)
     text = weather_to_text(weather, kind, unit, coordinates[2])
